@@ -16,11 +16,24 @@ import styles from "../styles/Home.module.css";
 import { parseIneligibility } from "../utils/parseIneligibility";
 
 const Home = () => {
-  const tokenAddress = "0x03728725240b021887355c943d040BF933F3d5F0";
+  const tokenAddress = "0xAFb755c5f2ea2aadBaE693d3BF2Dc2C35158dC04";
   const { contract } = useContract(tokenAddress, "token-drop");
   const address = useAddress();
   const [quantity, setQuantity] = useState(1);
   const { data: contractMetadata } = useContractMetadata(contract);
+
+  const [selectedValue, setSelectedValue] = useState<number>(50000); 
+
+  const handleRadioChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSelectedValue(parseInt(event.target.value, 10));
+  };
+    let Textx = '';
+    if (selectedValue === 50000) {
+      Textx = ' Claim (Free)';
+    } else if (selectedValue === 1000000 || selectedValue === 10000000) {
+      const result = (selectedValue * 0.00005).toString();
+      Textx = `Claim (${result} MATIC)`;
+    }
 
   const claimConditions = useClaimConditions(contract);
   const activeClaimCondition = useActiveClaimConditionForWallet(
@@ -183,7 +196,7 @@ const Home = () => {
       if (pricePerToken.eq(0)) {
         return "Mint (Free)";
       }
-      return `Mint (${priceToMint})`;
+      return `Mint`;
     }
     if (claimIneligibilityReasons.data?.length) {
       return parseIneligibility(claimIneligibilityReasons.data, quantity);
@@ -204,7 +217,8 @@ const Home = () => {
   ]);
 
   return (
-    <div className={styles.container}>
+    
+      <div className={`${styles.container} ${styles.claimBox}`}>
       {(claimConditions.data &&
         claimConditions.data.length > 0 &&
         activeClaimCondition.isError) ||
@@ -224,54 +238,58 @@ const Home = () => {
         <p>Loading...</p>
       ) : (
         <>
-          {contractMetadata?.image && (
-            <Image
-              src={contractMetadata?.image}
-              alt={contractMetadata?.name!}
-              width={200}
-              height={200}
-              style={{ objectFit: "contain" }}
-            />
-          )}
 
-          <h2 className={styles.title}>Claim Tokens</h2>
-          <p className={styles.explain}>
-            Claim ERC20 tokens from{" "}
-            <span className={styles.pink}>{contractMetadata?.name}</span>
-          </p>
+<h2 className={`${styles.title} ${styles.leftAlign}`}>🐶Morkie Token Portal🐶</h2>
+  <p className={`${styles.explain} ${styles.leftAlign}`}>
+    Claim <span className={styles.pink}>50,000</span> Tokens For Free<br />
+    Total Token Claimed <span className={styles.pink}>{claimedSupply.data?.displayValue}</span> /100M
+  </p>
+  <form className={`${styles.explainx} ${styles.leftAlign}`}>
+        <label>
+          <input
+            type="radio"
+            value="50000"
+            checked={selectedValue === 50000}
+            onChange={handleRadioChange}
+          />
+           Free
+        </label>
+
+        <label>
+          <input
+            type="radio"
+            value="1000000"
+            checked={selectedValue === 1000000}
+            onChange={handleRadioChange}
+          />
+          1 Million
+        </label>
+
+        <label>
+          <input
+            type="radio"
+            value="10000000"
+            checked={selectedValue === 10000000}
+            onChange={handleRadioChange}
+          />
+           10 Million🔥
+        </label>
+      </form>
         </>
       )}
-
-      <hr className={styles.divider} />
-
-      <div className={styles.claimGrid}>
-        <input
-          type="number"
-          placeholder="Enter amount to claim"
-          onChange={(e) => {
-            const value = parseInt(e.target.value);
-            if (value > maxClaimable) {
-              setQuantity(maxClaimable);
-            } else if (value < 1) {
-              setQuantity(1);
-            } else {
-              setQuantity(value);
-            }
-          }}
-          value={quantity}
-          className={`${styles.textInput} ${styles.noGapBottom}`}
-        />
+        <div className={styles.sbutton}>
         <Web3Button
           theme="dark"
           contractAddress={tokenAddress}
-          action={(contract) => contract.erc20.claim(quantity)}
+          action={(contract) => contract.erc20.claim(selectedValue)}
           onSuccess={() => alert("Claimed!")}
-          onError={(err) => alert(err)}
-        >
-          {buttonText}
+          onError={() => alert("Not enough MATIC Minimum")}
+     >
+           <div className={styles.explainz}>{Textx}</div>
         </Web3Button>
+        </div>
       </div>
-    </div>
+
   );
 };
 
